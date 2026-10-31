@@ -45,52 +45,6 @@ header {visibility: hidden;}
 
 API_BASE_URL = os.getenv("API_BASE_URL", "http://127.0.0.1:8000/api/v1")
 
-# Auto-bootstrap FastAPI backend when running locally or on Streamlit Community Cloud
-def _ensure_backend_service():
-    import socket
-    import threading
-    import time
-    from urllib.parse import urlparse
-    from pathlib import Path
-
-    parsed = urlparse(API_BASE_URL)
-    host = parsed.hostname or "127.0.0.1"
-    port = parsed.port or 8000
-
-    if host in ["127.0.0.1", "localhost", "0.0.0.0"]:
-        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
-            s.settimeout(0.3)
-            if s.connect_ex((host, port)) == 0:
-                return
-
-        # Ensure database exists if missing
-        db_file = Path(__file__).resolve().parent / "portfolix.db"
-        if not db_file.exists():
-            try:
-                from scripts.ingest_csv import run_ingestion
-                run_ingestion()
-            except Exception as e:
-                print(f"[AutoStart] DB initialization note: {e}")
-
-        def _run_server():
-            import uvicorn
-            from backend.app.main import app as fastapi_app
-            uvicorn.run(fastapi_app, host=host, port=port, log_level="warning")
-
-        srv_thread = threading.Thread(target=_run_server, daemon=True)
-        srv_thread.start()
-
-        for _ in range(12):
-            time.sleep(0.5)
-            try:
-                with httpx.Client(timeout=1.0) as client:
-                    if client.get(f"{API_BASE_URL}/health").status_code == 200:
-                        break
-            except Exception:
-                pass
-
-_ensure_backend_service()
-
 # Initialize Session State
 if "token" not in st.session_state:
     st.session_state["token"] = None
