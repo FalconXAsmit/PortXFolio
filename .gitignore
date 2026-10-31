@@ -42,6 +42,7 @@ htmlcov/
 
 # Local Database Files
 *.db
+!portfolix.db
 *.sqlite
 *.sqlite3
 
@@ -72,3 +73,8 @@ pnpm-debug.log*
 Thumbs.db
 data/*.csv
 data/processed/*.csv
+
+PortXFolio_Complete_Source_Code.pdf
+PortXFolio_Project_Screenshots.pdf
+PortXFolio_Project_Synopsis.pdf
+portfolix.db
